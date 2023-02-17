@@ -96,6 +96,25 @@
        (displayMat matriz 0 0)
   (playerTurnMenu player1 player2)
   )
+
+
+
+
+(define (randomRowNumber)
+  (random 5))
+
+(define (randomColumnNumber)
+  (random 6))
+
+(define (randomBoard player1 player2) 
+
+ (displayln "Se rellenó el tablero aleatoriamente")
+ (displayln (randomRowNumber))
+ (displayln (randomColumnNumber))
+  
+ )
+
+
 (define (run-menu)
 
   (define player1 (player "X" list 0))
@@ -111,7 +130,7 @@
        (playerTurnMenu player1 player2)
        (loop)]
       [(eq? choice 'option2)
-       (displayln "You chose Option 2.")
+       (randomBoard player1 player2)
        (loop)]
       [(eq? choice 'option3)
        (displayln "You chose Option 3.")
