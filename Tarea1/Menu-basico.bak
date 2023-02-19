@@ -1,6 +1,4 @@
 #lang racket
-(require simple-matrix)
-
 (struct player (symbol moves moveQuant)#:mutable) 
 (define matriz(build-list 6 (lambda (i)
                  (build-list 5 (lambda (j) '#\ )))))
@@ -152,37 +150,13 @@
 (define (randomColumnNumber)
   (random 6))
 
-(define (randomMovement matriz currPlayer) 
+(define (randomBoard player1 player2) 
+
+ (displayln "Se rellenó el tablero aleatoriamente")
  (define row (randomRowNumber))
  (define column (randomColumnNumber))
  (displayln row)
  (displayln column)
- (define volcado(list-set (list-ref matriz row) column (player-symbol currPlayer)))
-  
-
-  (list-set matriz row volcado)
-
-)
-
-(define (randomBoard player1 player2 currPlayer) 
-
-  (if(equal? currPlayer player1)
-     (set! currPlayer player2)
-     (set! currPlayer player1)
-     )
- (displayln (string-append "Turno de: " (player-symbol currPlayer))  )
- (set! matriz (randomMovement matriz currPlayer))
-
-  (display #\| )
-  
-       (displayMat matriz 0 0)
-  
-  (if (countFilledSpaces 0 0 0)
-(displayPlayMenu)
-(randomBoard player1 player2 currPlayer)
-      )
- (displayln "Se rellenó el tablero aleatoriamente")
-
   
  )
 
@@ -226,7 +200,7 @@
        (playerTurnMenu player1 player2 currPlayer)
        (loop)]
       [(eq? choice 'option2)
-       (randomBoard player1 player2 currPlayer)
+       (randomBoard player1 player2)
        (loop)]
       [(eq? choice 'option3)
        (displayln "You chose Option 3.")
