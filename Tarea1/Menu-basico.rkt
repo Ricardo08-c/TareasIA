@@ -22,7 +22,7 @@
     [(string=? input "3") 'option3]
     [(string=? input "4") 'exit]
     [else
-     (displayln "Invalid choice, please try again.")
+     (displayln "Opción inválida, inténtalo de nuevo")
      (get-user-choice)]))
 
 (define (displayMat matrix i j)
@@ -92,6 +92,32 @@
 
 
 
+(define(countSimbolo i j count simbolo)
+  (if(>= i (length matriz))
+       (<= count 2)
+       (if(< j(length (list-ref matriz i)))
+       (begin
+          (if(equal? (list-ref(list-ref matriz i) j)simbolo)
+          (countSimbolo  i (+ j 1) (+ count 1 ) simbolo)
+          (countSimbolo  i (+ j 1) count simbolo)
+          )
+          
+          
+       
+         )
+         
+
+       (begin
+                  
+         
+         
+         (countSimbolo (+ i 1) 0 count simbolo) )
+       
+        
+       
+       ))
+  )
+
 (define(countFilledSpaces i j count)
   (if(>= i (length matriz))
        (>= count 24)
@@ -128,14 +154,41 @@
   (define input (read-line))
   (define fila(-(char->integer(string-ref input 0)) 48))
   (define col(-(char->integer(string-ref input 2)) 48))
+  (define jugador  (player-symbol currPlayer))
+  (define simbolocontrario "")
+  (if(equal? jugador "O")
+     (set! simbolocontrario "X")
+     (set! simbolocontrario "O" )
+           
+     
+     )
+  
+  
   
   ; validar que la ficha sea la contraria a currPlayer
-  
+  (displayln simbolocontrario)
   (define volcado(list-set (list-ref matriz fila) col #\ ))
+  (if(equal?(list-ref (list-ref matriz fila) col) simbolocontrario)
+     (if(formaLinea fila col simbolocontrario)
+        (begin
+         (displayln "¡Eror, no se puede quitar esa ficha, intenta con otra")
+         (cogerFichaEnemiga currPlayer)
+         )
+        
+        (set! matriz(list-set matriz fila volcado))
+        
+        )
+     
+     (begin
+     (displayln "¡Eror, no se puede quitar esa ficha, intenta con otra")
+     (cogerFichaEnemiga currPlayer)
+     )
+     
+     )
   
 
-  (set! matriz(list-set matriz fila volcado))
-  #t
+  
+  
 
   
   
@@ -161,8 +214,15 @@
   (display #\| )
   
        (displayMat matriz 0 0)
-  
-  (displayPlayMenu  player1 player2 currPlayer)
+  (if(countSimbolo 0 0 0 "O")
+     (displayln "El ganador es X")
+     (if(countSimbolo 0 0 0 "X")
+     (displayln "El ganador es O")
+      (displayPlayMenu  player1 player2 currPlayer)
+     
+     )
+     )
+
   )
 
 
@@ -400,7 +460,7 @@
   (define player2 (player "O" list 0))
   (define currPlayer player1)
   (define (loop)
-    (displayln "Welcome to the menu!")
+    (displayln "Bienvenido al menu")
     (display-menu)
     (define choice (get-user-choice))
     (cond
