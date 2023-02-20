@@ -1,5 +1,6 @@
 #lang racket
 
+
 (struct player (symbol moves moveQuant)#:mutable) 
 (define matriz(build-list 6 (lambda (i)
                  (build-list 5 (lambda (j) '#\ )))))
@@ -284,14 +285,55 @@
   
   
   )
-(define (formaLinea fila columna caracter)
-  #t
-  )
+
+(define (formaLinea fila col caracter matriz)
+  (define ancho (length (first matriz))) ; ancho de la matriz
+  (define alto (length matriz)) ; alto de la matriz
+  (define (enRango f c) ; verifica que una posición está dentro del rango de la matriz
+    (and (>= f 0) (< f alto) (>= c 0) (< c ancho)))
+  
+  (define (verificarArriba f c n)
+    (cond ((= n 3) #t) ; si ya se encontraron tres caracteres consecutivos, se ha formado la línea
+          ((not (enRango f c)) #f) ; si estamos fuera de la matriz, la línea no se ha formado
+          ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f) ; si el caracter en esta posición no es el buscado, la línea no se ha formado
+          (else (verificarArriba (- f 1) c (+ n 1))))) ; si seguimos buscando arriba, incrementamos la cuenta de caracteres consecutivos
+  
+  (define (verificarAbajo f c n)
+    (cond ((= n 3) #t)
+          ((not (enRango f c)) #f)
+          ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
+          (else (verificarAbajo (+ f 1) c (+ n 1)))))
+  
+  (define (verificarIzquierda f c n)
+    (cond ((= n 3) #t)
+          ((not (enRango f c)) #f)
+          ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
+          (else (verificarIzquierda f (- c 1) (+ n 1)))))
+  
+  (define (verificarDerecha f c n)
+    (cond ((= n 3) #t)
+          ((not (enRango f c)) #f)
+          ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
+          (else (verificarDerecha f (+ c 1) (+ n 1)))))
+  (or 
+      (eq? (list-ref (list-ref matriz fila) col) 0) #f
+      (verificarArriba fila col 1) ; se forma línea hacia arriba
+      (verificarAbajo fila col 1) ; se forma línea hacia abajo
+      (verificarIzquierda fila col 1) ; se forma línea hacia la izquierda
+      (verificarDerecha fila col 1))) ; se forma línea hacia la derecha
+
+
+
 (define (randomRowNumber)
   (random 6))
 
 (define (randomColumnNumber)
   (random 5))
+
+
+(define (Ocupado row column)
+  (eq? (list-ref (list-ref matriz row) column) 0) #f
+)
 
 (define (randomBoard player1 player2 currPlayer)
    (define row (randomRowNumber))
@@ -304,7 +346,8 @@
   (if (not(countFilledSpaces 0 0 0))
       (begin
         (displayln "Se rellenó el tablero aleatoriamente")
-      (if(not(formaLinea row column simbolo))
+      (displayln (formaLinea row column simbolo matriz))
+      (if(not(formaLinea row column simbolo matriz))
          (begin
               (set! matriz(list-set matriz row anterior))
                (if(equal? currPlayer player1)
