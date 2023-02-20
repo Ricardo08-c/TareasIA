@@ -134,7 +134,8 @@
   (define volcado(list-set (list-ref matriz fila) col #\ ))
   
 
-  (list-set matriz fila volcado)
+  (set! matriz(list-set matriz fila volcado))
+  #t
 
   
   
@@ -156,10 +157,7 @@
      
      
      )
-  (if(> 3  2)
-     (cogerFichaEnemiga currPlayer)
-     #\
-     )
+  
   (display #\| )
   
        (displayMat matriz 0 0)
@@ -226,11 +224,17 @@
   (if cond
       (begin
         (set! matriz(list-set matriz filaIn anterior))
+        (if(formaLinea filaDes colDes simbolo)
+           (begin
+                (display #\| )
+  
+       (displayMat matriz 0 0)
+        (cogerFichaEnemiga currPlayer)
         #t
-      
-      
-      
-      
+             )
+           #t)
+        #t
+        
       
       )
       
@@ -286,41 +290,53 @@
   
   )
 
-(define (formaLinea fila col caracter matriz)
+(define (formaLinea fila col caracter)
   (define ancho (length (first matriz))) ; ancho de la matriz
   (define alto (length matriz)) ; alto de la matriz
   (define (enRango f c) ; verifica que una posición está dentro del rango de la matriz
     (and (>= f 0) (< f alto) (>= c 0) (< c ancho)))
   
   (define (verificarArriba f c n)
-    (cond ((= n 3) #t) ; si ya se encontraron tres caracteres consecutivos, se ha formado la línea
+    (cond ((= n 2) #t) ; si ya se encontraron tres caracteres consecutivos, se ha formado la línea
           ((not (enRango f c)) #f) ; si estamos fuera de la matriz, la línea no se ha formado
           ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f) ; si el caracter en esta posición no es el buscado, la línea no se ha formado
           (else (verificarArriba (- f 1) c (+ n 1))))) ; si seguimos buscando arriba, incrementamos la cuenta de caracteres consecutivos
   
   (define (verificarAbajo f c n)
-    (cond ((= n 3) #t)
+    (cond ((= n 2) #t)
           ((not (enRango f c)) #f)
           ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
           (else (verificarAbajo (+ f 1) c (+ n 1)))))
   
   (define (verificarIzquierda f c n)
-    (cond ((= n 3) #t)
+    (cond ((= n 2) #t)
           ((not (enRango f c)) #f)
           ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
           (else (verificarIzquierda f (- c 1) (+ n 1)))))
   
   (define (verificarDerecha f c n)
-    (cond ((= n 3) #t)
+    (cond ((= n 2) #t)
           ((not (enRango f c)) #f)
           ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
           (else (verificarDerecha f (+ c 1) (+ n 1)))))
+  (define (verificarMedioVert f c n)
+    (cond ((= n 2) #t)
+          ((not (enRango f c)) #f)
+          ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
+          (else (verificarMedioVert (+ f 2) c (+ n 1)))))
+  (define (verificarMedioHor f c n)
+    (cond ((= n 2) #t)
+          ((not (enRango f c)) #f)
+          ((not (eq? (list-ref (list-ref matriz f) c) caracter)) #f)
+          (else (verificarMedioVert f (+ c 2) (+ n 1)))))
   (or 
       (eq? (list-ref (list-ref matriz fila) col) 0) #f
-      (verificarArriba fila col 1) ; se forma línea hacia arriba
-      (verificarAbajo fila col 1) ; se forma línea hacia abajo
-      (verificarIzquierda fila col 1) ; se forma línea hacia la izquierda
-      (verificarDerecha fila col 1))) ; se forma línea hacia la derecha
+      (verificarArriba (- fila 1) col 0) ; se forma línea hacia arriba
+      (verificarAbajo (+ fila 1) col 0) ; se forma línea hacia abajo
+      (verificarIzquierda fila (- col 1) 0) ; se forma línea hacia la izquierda
+      (verificarMedioVert (- fila 1) col 0) ; se forma línea vertical en el medio
+      (verificarMedioHor fila (- col 1) 0) ; se forma línea horizontal en el medio
+      (verificarDerecha fila (+ col 1) 0))) ; se forma línea hacia la derecha
 
 
 
@@ -340,14 +356,13 @@
    (define column (randomColumnNumber))
   (define simbolo(player-symbol currPlayer))
   
-  (display #\|)
-  (displayMat matriz 0 0)
+  
   (define anterior(list-set (list-ref matriz row) column simbolo))
   (if (not(countFilledSpaces 0 0 0))
       (begin
-        (displayln "Se rellenó el tablero aleatoriamente")
-      (displayln (formaLinea row column simbolo matriz))
-      (if(not(formaLinea row column simbolo matriz))
+        
+      
+      (if(not(formaLinea row column simbolo ))
          (begin
               (set! matriz(list-set matriz row anterior))
                (if(equal? currPlayer player1)
@@ -373,36 +388,9 @@
 
 
   
- (displayln row)
- (displayln column)
+ 
 
  )
-
-(define (transpose matrix)
-  (apply map list matrix))
-
-
-(define (no-hay-3-repeticiones? matriz)
-  (and (no-hay-repeticiones-verticales? matriz)
-       (no-hay-repeticiones-horizontales? matriz)))
-
-(define (no-hay-repeticiones-verticales? matriz)
-  (not (existen-3-repeticiones? (transpose matriz))))
-
-(define (no-hay-repeticiones-horizontales? matriz)
-  (not (existen-3-repeticiones? matriz)))
-
-(define (existen-3-repeticiones? matriz)
-  (ormap (lambda (fila) (existen-3-repeticiones-aux? fila 0))
-         matriz
-         (transpose matriz)))
-
-(define (existen-3-repeticiones-aux? fila n)
-  (cond ((>= n (- (length fila) 2)) #f)
-        ((and (equal? (list-ref fila n) (list-ref fila (+ n 1)))
-              (equal? (list-ref fila n) (list-ref fila (+ n 2))))
-         #t)
-        (else (existen-3-repeticiones-aux? fila (+ n 1)))))
 
 
 
@@ -423,6 +411,9 @@
        (loop)]
       [(eq? choice 'option2)
        (randomBoard player1 player2 currPlayer)
+       (display #\|)
+       (displayMat matriz 0 0)
+       (displayPlayMenu player1 player2 currPlayer)
        (loop)]
       [(eq? choice 'option3)
        (displayln "You chose Option 3.")
