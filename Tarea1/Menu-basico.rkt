@@ -34,6 +34,7 @@
 (define (displayMat matrix i j)
   (if (>= i (length matrix))
       (display #\newline)
+
       (if (< j (length (list-ref matrix i)))
           (begin
             (display (list-ref (list-ref matrix i) j))
@@ -45,6 +46,7 @@
             (displayMat matrix i (+ j 1)))
 
           (begin
+            (display i)
             (display #\newline)
             (display #\|)
             (displayMat matrix (+ i 1) 0)))))
@@ -80,7 +82,7 @@
 ; Salida: Elemento entero
 (define (countFilledSpaces i j count)
   (if (>= i (length matriz))
-      (>= count 24)
+      (>= count 7)
       (if (< j (length (list-ref matriz i)))
           (begin
             (if (not (equal? (list-ref (list-ref matriz i) j) '#\ ))
@@ -131,8 +133,8 @@
       (if (equal? currPlayer player1) (set! currPlayer player2) (set! currPlayer player1))
       (set! currPlayer currPlayer))
 
+  (display " 0     1     2     3     4   \n")
   (display #\|)
-
   (displayMat matriz 0 0)
   (if (countSimbolo 0 0 0 "O")
       (displayln "El ganador es X")
@@ -185,8 +187,8 @@
         (set! matriz (list-set matriz filaIn anterior))
         (if (formaLinea filaDes colDes simbolo)
             (begin
+              (display " 0     1     2     3     4   \n")
               (display #\|)
-
               (displayMat matriz 0 0)
               (cogerFichaEnemiga currPlayer)
               #t)
@@ -211,8 +213,8 @@
 
   (set! matriz (movePieces matriz currPlayer))
 
+  (display " 0     1     2     3     4   \n")
   (display #\|)
-
   (displayMat matriz 0 0)
 
   (if (countFilledSpaces 0 0 0)
@@ -332,6 +334,7 @@
        (loop)]
       [(eq? choice 'option2)
        (randomBoard player1 player2 currPlayer)
+       (display " 0     1     2     3     4   \n")
        (display #\|)
        (displayMat matriz 0 0)
        (displayPlayMenu player1 player2 currPlayer)
