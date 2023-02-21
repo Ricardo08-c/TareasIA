@@ -10,20 +10,20 @@
   (displayln "Menu:")
   (displayln "1. Llenar manualmente")
   (displayln "2. Llenar aleatoriamente")
-  (displayln "4. Salir"))
+  (displayln "3. Salir"))
 
 ; Función que recibe una opción por teclado
 ; Entrada: Int
 ; Salida: Opción escogida.
 (define (get-user-choice)
-  (display "Enter your choice: ")
+  (display "Ingresa una opción ")
   (flush-output)
   (define input (read-line))
   (cond
     [(string=? input "1") 'option1]
     [(string=? input "2") 'option2]
-    [(string=? input "3") 'option3]
-    [(string=? input "4") 'exit]
+    [(string=? input "3") 'exit]
+    
     [else
      (displayln "Opción inválida, inténtalo de nuevo")
      (get-user-choice)]))
@@ -82,7 +82,7 @@
 ; Salida: Elemento entero
 (define (countFilledSpaces i j count)
   (if (>= i (length matriz))
-      (>= count 7)
+      (>= count 24)
       (if (< j (length (list-ref matriz i)))
           (begin
             (if (not (equal? (list-ref (list-ref matriz i) j) '#\ ))
@@ -100,7 +100,7 @@
   (displayln #\ )
 
   (displayln
-   "¡Lograste alinear 3 elementos, coje una ficha enemiga! Ingresa la ficha, ejemplo : 1 2 ")
+   "¡Lograste alinear 3 elementos, coje una ficha enemiga! Ingresa la ficha, ejemplo: bash/user$0 1")
 
   (flush-output)
   (define input (read-line))
@@ -127,7 +127,7 @@
 (define (displayPlayMenu player1 player2 currPlayer)
 
   (displayln (string-append "Turno de: " (player-symbol currPlayer)))
-  (define cnd (movePiecesGame currPlayer))
+  (define cnd (moveValidPieces currPlayer))
 
   (if (equal? cnd #t)
       (if (equal? currPlayer player1) (set! currPlayer player2) (set! currPlayer player1))
@@ -153,15 +153,48 @@
 
   (and cond1 cond2 (or rowMove colMove)))
 
+;Permite Validar si el usuario está realizando el movimiento correctamente, esta vez para llamar a realizar a jugada
+(define(keepValidating currPlayer input)
+  (define filaIn (- (char->integer (string-ref input 0)) 48))
+  (define colIn (- (char->integer (string-ref input 2)) 48))
+  (define filaDes (- (char->integer (string-ref input 7)) 48))
+  (define colDes (- (char->integer (string-ref input 9)) 48))
+  
+  
+  (define fueraRango(or(< filaIn 0 ) (< filaDes 0 ) (< colIn 0 ) (< colDes 0)))
+  (displayln fueraRango)
+   (if(or (>= filaIn 6) (>= filaDes 6) (>= colDes 5) (>= colIn 5) fueraRango)
+      (begin
+     (displayln "Movimiento fuera de rango, ingresa el movimiento correctamente, ejemplo: bash/user$1 2 -> 3 2 ")
+     #f
+     
+     )
+      (movePiecesGame currPlayer input)
+     )
+  )
+;Permite Validar si el usuario está realizando el movimiento correctamente
+(define (moveValidPieces currPlayer)
+  
+  (flush-output)
+  (define input (read-line))
+  (if(=(string-length input) 10)
+     (keepValidating currPlayer input)
+     (begin
+     (displayln "Error de sintaxis, ingresa bien el movimiento, ejemplo: bash/user$1 2 -> 3 2 ")
+     #f
+     
+     )
+     )
+  
+  
+  )
 ; Función que realiza el movimiento una vez que se colocadas todas las fichas.
 ; Entrada: Jugador actual
 ; Salida: Movimiento de la ficha si es válido
-(define (movePiecesGame currPlayer)
+(define (movePiecesGame currPlayer input)
 
-  (display "Ingresa el movimiento, debe respetar los espacios, sintáxis: $/1 2 -> 3 2 ")
+  (displayln "Ingresa el movimiento, debe respetar los espacios, ejemplo: bash/user$1 2 -> 3 2 ")
 
-  (flush-output)
-  (define input (read-line))
   (define filaIn (- (char->integer (string-ref input 0)) 48))
   (define colIn (- (char->integer (string-ref input 2)) 48))
   (define filaDes (- (char->integer (string-ref input 7)) 48))
@@ -196,11 +229,11 @@
         #t)
 
       (begin
-        (writeln #\ )
-        (writeln "XXXXXXXXXXXXXX")
-        (writeln "Movimiento inválido")
-        (writeln "XXXXXXXXXXXXXX")
-        (writeln #\ )
+        (displayln #\ )
+        
+        (displayln "Movimiento inválido XXX")
+        
+        (displayln #\ )
         #f)))
 
 ; Función que determinar el turno de cada jugador.
@@ -337,12 +370,10 @@
        (display " 0     1     2     3     4   \n")
        (display #\|)
        (displayMat matriz 0 0)
-       (displayPlayMenu player1 player2 currPlayer)
+       (displayPlayMenu player1 player2 currPlayer)      
+      
        (loop)]
-      [(eq? choice 'option3)
-       (displayln "You chose Option 3.")
-       (loop)]
-      [(eq? choice 'exit) (displayln "Goodbye!")]
+      [(eq? choice 'exit) (displayln "Gracias por jugar a Dara, Made by Ricardo Soto & Brandon Redondo")]
       [else (loop)]))
   (loop))
 (run-menu)
