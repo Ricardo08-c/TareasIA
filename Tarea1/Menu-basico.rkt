@@ -1,5 +1,21 @@
 #lang racket
 
+; Juego Dara
+; El juego consiste en formar tres fichas en una línea y eliminar la mayor cantidad de fichas
+; del oponente hasta que este ya no pueda formar tres fichas en línea.
+;
+; Instrucciones de ejecución
+; a) Abrir DrRacket.
+; b) Open.
+; c) Seleccionamos la ubicación de este archivo.
+; d) Seleccionamos Run.
+; Con esto el programa será ejecutado y le pedirá una opción para empezar a jugar
+; Introducimos 1 para iniciar el juego con rellenado de tablero manual
+; Introducimos 2 para iniciar el juego con rellenado de tablero aleatorio
+; Introducimos 3 Para salir
+
+; Made by Ricardo Soto && Brandon Redondo
+
 (struct player (symbol moves moveQuant) #:mutable)
 
 ; Función que crea una matriz de 6x5.
@@ -23,7 +39,7 @@
     [(string=? input "1") 'option1]
     [(string=? input "2") 'option2]
     [(string=? input "3") 'exit]
-    
+
     [else
      (displayln "Opción inválida, inténtalo de nuevo")
      (get-user-choice)]))
@@ -154,40 +170,30 @@
   (and cond1 cond2 (or rowMove colMove)))
 
 ;Permite Validar si el usuario está realizando el movimiento correctamente, esta vez para llamar a realizar a jugada
-(define(keepValidating currPlayer input)
+(define (keepValidating currPlayer input)
   (define filaIn (- (char->integer (string-ref input 0)) 48))
   (define colIn (- (char->integer (string-ref input 2)) 48))
   (define filaDes (- (char->integer (string-ref input 7)) 48))
   (define colDes (- (char->integer (string-ref input 9)) 48))
-  
-  
-  (define fueraRango(or(< filaIn 0 ) (< filaDes 0 ) (< colIn 0 ) (< colDes 0)))
+
+  (define fueraRango (or (< filaIn 0) (< filaDes 0) (< colIn 0) (< colDes 0)))
   (displayln fueraRango)
-   (if(or (>= filaIn 6) (>= filaDes 6) (>= colDes 5) (>= colIn 5) fueraRango)
+  (if (or (>= filaIn 6) (>= filaDes 6) (>= colDes 5) (>= colIn 5) fueraRango)
       (begin
-     (displayln "Movimiento fuera de rango, ingresa el movimiento correctamente, ejemplo: bash/user$1 2 -> 3 2 ")
-     #f
-     
-     )
-      (movePiecesGame currPlayer input)
-     )
-  )
+        (displayln
+         "Movimiento fuera de rango, ingresa el movimiento correctamente, ejemplo: bash/user$1 2 -> 3 2 ")
+        #f)
+      (movePiecesGame currPlayer input)))
 ;Permite Validar si el usuario está realizando el movimiento correctamente
 (define (moveValidPieces currPlayer)
-  
+
   (flush-output)
   (define input (read-line))
-  (if(=(string-length input) 10)
-     (keepValidating currPlayer input)
-     (begin
-     (displayln "Error de sintaxis, ingresa bien el movimiento, ejemplo: bash/user$1 2 -> 3 2 ")
-     #f
-     
-     )
-     )
-  
-  
-  )
+  (if (= (string-length input) 10)
+      (keepValidating currPlayer input)
+      (begin
+        (displayln "Error de sintaxis, ingresa bien el movimiento, ejemplo: bash/user$1 2 -> 3 2 ")
+        #f)))
 ; Función que realiza el movimiento una vez que se colocadas todas las fichas.
 ; Entrada: Jugador actual
 ; Salida: Movimiento de la ficha si es válido
@@ -230,9 +236,9 @@
 
       (begin
         (displayln #\ )
-        
+
         (displayln "Movimiento inválido XXX")
-        
+
         (displayln #\ )
         #f)))
 
@@ -370,10 +376,11 @@
        (display " 0     1     2     3     4   \n")
        (display #\|)
        (displayMat matriz 0 0)
-       (displayPlayMenu player1 player2 currPlayer)      
-      
+       (displayPlayMenu player1 player2 currPlayer)
+
        (loop)]
-      [(eq? choice 'exit) (displayln "Gracias por jugar a Dara, Made by Ricardo Soto & Brandon Redondo")]
+      [(eq? choice 'exit)
+       (displayln "Gracias por jugar a Dara, Made by Ricardo Soto & Brandon Redondo")]
       [else (loop)]))
   (loop))
 (run-menu)
