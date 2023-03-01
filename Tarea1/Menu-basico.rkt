@@ -1,6 +1,5 @@
 #lang racket
 
-
 ; Juego Dara
 ; El juego consiste en formar tres fichas en una línea y eliminar la mayor cantidad de fichas
 ; del oponente hasta que este ya no pueda formar tres fichas en línea.
@@ -76,27 +75,17 @@
 
       (if (< j (length (list-ref matrix i)))
           (begin
-                                                       
-            (set! simbolo(list-ref (list-ref matriz i) j))
+
+            (set! simbolo (list-ref (list-ref matriz i) j))
             (if (equal? simbolo "O")
-                (set! hash(+ hash (* suma 2)))
-                (if(equal? simbolo "X")
-                   (set! hash(+ hash (* suma 1)))
-                   (set! hash hash)
-                   )
-                
-                )
-            
-            (getHash matrix i (+ j 1) hash (+ suma 1))
-            
-            )
+                (set! hash (+ hash (* suma 2)))
+                (if (equal? simbolo "X") (set! hash (+ hash (* suma 1))) (set! hash hash)))
+
+            (getHash matrix i (+ j 1) hash (+ suma 1)))
           (begin
-            
-            
-            
-            (getHash matrix (+ i 1) 0 hash (+ suma 1)))
-          )))
- 
+
+            (getHash matrix (+ i 1) 0 hash (+ suma 1))))))
+
 ; Función que hace el movimiento de pieza.
 ; Entrada: La matriz y el jugador actual
 ; Salida: Recibe la ficha a mover por teclado y realiza el cambio de estado.
@@ -107,7 +96,7 @@
   (define fila (- (char->integer (string-ref input 0)) 48))
   (define col (- (char->integer (string-ref input 2)) 48))
   (define volcado (list-set (list-ref matriz fila) col (player-symbol currPlayer)))
-  
+
   (list-set matriz fila volcado))
 
 ; Función que cuenta la cantidad de simbolos en la matriz
@@ -139,6 +128,26 @@
           (begin
 
             (countFilledSpaces (+ i 1) 0 count)))))
+
+; Función que retorna el número de simbolos de una matriz
+; Entrada:  X / O
+; Salida: Número de repeticiones de ese carácter en la matriz
+(define (contar-simbolo simbolo matriz)
+  (let ([filas (length matriz)] [columnas (length (car matriz))])
+    (define (contar-fila fila)
+      (length (filter (lambda (elemento) (equal? elemento simbolo)) fila)))
+    (apply + (map contar-fila matriz))))
+
+; Función que retornar la utilidad de una matriz
+; Entrada: La matriz a analizar y el jugador actual
+; Salida: La diferencia entre las fichas de un jugador menos el otro.
+(define (utilidad matrizAnalizada currPlayer)
+  (define simbolo (player-symbol currPlayer))
+  (define countX (contar-simbolo "X" matrizAnalizada))
+  (define countY (contar-simbolo "O" matrizAnalizada))
+  (displayln countX)
+  (displayln countY)
+  (if (equal? simbolo "X") (- countX countY) (- countY countX)))
 
 ; Función que elimina una ficha del jugador contrario solicitando cual captura mediante input
 ; Entrada: Jugador Actual
@@ -173,6 +182,9 @@
         (cogerFichaEnemiga currPlayer))))
 (define (displayPlayMenu player1 player2 currPlayer)
 
+  (define utility (utilidad matriz currPlayer))
+  (displayln utility)
+
   (displayln (string-append "Turno de: " (player-symbol currPlayer)))
   (define cnd (moveValidPieces currPlayer))
 
@@ -200,30 +212,23 @@
 
   (and cond1 cond2 (or rowMove colMove)))
 
-
-
 (define (moveV filaIn colIn filaDes colDes currPlayer mat)
-  
+
   (define cond1 #f)
   (define cond2 #f)
   (define fueraRango (or (< filaIn 0) (< filaDes 0) (< colIn 0) (< colDes 0)))
   (if (or (>= filaIn 6) (>= filaDes 6) (>= colDes 5) (>= colIn 5) fueraRango)
       #f
       (begin
-        
+
         (set! cond1 (equal? (player-symbol currPlayer) (list-ref (list-ref mat filaIn) colIn)))
-            (set! cond2 (equal? (list-ref (list-ref mat filaDes) colDes) #\ ))
-      (if (and cond1 cond2)
-          
-            
+        (set! cond2 (equal? (list-ref (list-ref mat filaDes) colDes) #\ ))
+        (if (and cond1 cond2)
+
             #t
-            
-            
-          #f
-          ))
-  )
-  )
-  
+
+            #f))))
+
 ;Permite Validar si el usuario está realizando el movimiento correctamente, esta vez para llamar a realizar a jugada
 (define (keepValidating currPlayer input)
   (define filaIn (- (char->integer (string-ref input 0)) 48))
@@ -232,7 +237,7 @@
   (define colDes (- (char->integer (string-ref input 9)) 48))
 
   (define fueraRango (or (< filaIn 0) (< filaDes 0) (< colIn 0) (< colDes 0)))
-  
+
   (if (or (>= filaIn 6) (>= filaDes 6) (>= colDes 5) (>= colIn 5) fueraRango)
       (begin
         (displayln
@@ -251,11 +256,8 @@
         #f)))
 
 (define (matrix-set matrix i j valor)
-  (define volcado (list-set(list-ref matrix i) j valor))
-  (list-set matrix i volcado)
-  
-  
-  )
+  (define volcado (list-set (list-ref matrix i) j valor))
+  (list-set matrix i volcado))
 ; Función que realiza el movimiento una vez que se colocadas todas las fichas.
 ; Entrada: Jugador actual
 ; Salida: Movimiento de la ficha si es válido
@@ -282,13 +284,12 @@
   (define anterior (list-set (list-ref matriz filaIn) colIn #\ ))
 
   ; Aqui se debe validar el movimiento (que no hayan fichas donde lo mueve, que haga un 3 en línea
-  
-  
+
   (if cond
       (begin
-        
+
         (set! matriz (list-set matriz filaIn anterior))
-        (children matriz 0 0  currPlayer)
+        (children matriz 0 0 currPlayer)
         (if (formaLinea filaDes colDes simbolo)
             (begin
               (display " 0     1     2     3     4   \n")
@@ -414,7 +415,6 @@
               (set! matriz (list-set matriz row anterior))
               (if (equal? currPlayer player1) (set! currPlayer player2) (set! currPlayer player1))
               (randomBoard player1 player2 currPlayer))
-
             (randomBoard player1 player2 currPlayer)))
       #\
 ))
@@ -422,125 +422,80 @@
 ; Función principal que corre el código.
 ; Entrada: -
 ; Salida: Juego de dara.
-(define (hagoJugada matrix  fila col currPlayer)
+(define (hagoJugada matrix fila col currPlayer)
   (define abajo (+ fila 1))
   (define arriba (- fila 1))
   (define izquierda (- col 1))
   (define derecha (+ col 1))
   (define retorno '())
-  
-  
-  (define lista(append matrix '()))
+
+  (define lista (append matrix '()))
   (define simbolo (player-symbol currPlayer))
   (when (moveV fila col abajo col currPlayer matrix)
-      (define newMat(matrix-set lista  abajo col simbolo))
-      (define newMat2(matrix-set newMat  fila col '#\ ))
-   
-            
-    (define h(getHash newMat2 0 0 0 1))
-    (when (not (member h listaHashes) )
-      (begin
-      (set! listaHashes  (append listaHashes '( h)))
-      (set! retorno (append retorno newMat2))
-      (displayln "abajo")
-      (displayln fila )
-      (displayln col )
-      (displayln newMat2)
-      )
-      
-      
-      )
-      )
-  (when (moveV fila col arriba col currPlayer matrix)
-        (define newMat(matrix-set lista arriba col simbolo))
-      (define newMat2(matrix-set newMat  fila col '#\ ))
-    
-            
-    (define h(getHash newMat2 0 0 0 1))
-    (when (not (member h listaHashes) )
-      (begin
-      (set! listaHashes  (append listaHashes '(h)))
-      (set! retorno (append retorno newMat2))
-      (displayln "arr")
-      (displayln fila )
-      (displayln col )
-      (displayln newMat2)
-      )
-      
-      
-      
-      )
-      )
-  (when (moveV fila col fila izquierda currPlayer matrix)
-      (define newMat(matrix-set lista  fila izquierda simbolo))
-      (define newMat2(matrix-set newMat fila col '#\ ))
-    
-            
-    (define h(getHash newMat2 0 0 0 1))
-    (when (not (member h listaHashes) )
-      (begin
-      (set! listaHashes  (append listaHashes '( h)))
-      (set! retorno (append retorno newMat2))
-      (displayln "izq")
-      (displayln fila )
-      (displayln col )
-      (displayln newMat2)
-      )
-      
-      
-      )
-      )
-  
-  (when (moveV fila col fila derecha currPlayer matrix)
-      (define newMat(matrix-set lista  fila derecha simbolo))
-      (define newMat2(matrix-set newMat  fila col '#\ ))
-    
-      
-    (define h(getHash newMat2 0 0 0 1))
-    (when (not (member h listaHashes) )
-      (begin
-      (set! listaHashes  (append listaHashes '( h)))
-      (set! retorno (append retorno newMat2))
-      (displayln "der")
-      (displayln fila )
-      (displayln col )
-      (displayln newMat2)
-      
-      )
-      
-      
-      )
-      )
-  
-  retorno
-  
-  
-  
-  
-  
-    
-  )
+    (define newMat (matrix-set lista abajo col simbolo))
+    (define newMat2 (matrix-set newMat fila col '#\ ))
 
-(define (children matrix  i j simbolo)
+    (define h (getHash newMat2 0 0 0 1))
+    (when (not (member h listaHashes))
+      (begin
+        (set! listaHashes (append listaHashes '(h)))
+        (set! retorno (append retorno newMat2))
+        (displayln "abajo")
+        (displayln fila)
+        (displayln col)
+        (displayln newMat2))))
+  (when (moveV fila col arriba col currPlayer matrix)
+    (define newMat (matrix-set lista arriba col simbolo))
+    (define newMat2 (matrix-set newMat fila col '#\ ))
+
+    (define h (getHash newMat2 0 0 0 1))
+    (when (not (member h listaHashes))
+      (begin
+        (set! listaHashes (append listaHashes '(h)))
+        (set! retorno (append retorno newMat2))
+        (displayln "arr")
+        (displayln fila)
+        (displayln col)
+        (displayln newMat2))))
+  (when (moveV fila col fila izquierda currPlayer matrix)
+    (define newMat (matrix-set lista fila izquierda simbolo))
+    (define newMat2 (matrix-set newMat fila col '#\ ))
+
+    (define h (getHash newMat2 0 0 0 1))
+    (when (not (member h listaHashes))
+      (begin
+        (set! listaHashes (append listaHashes '(h)))
+        (set! retorno (append retorno newMat2))
+        (displayln "izq")
+        (displayln fila)
+        (displayln col)
+        (displayln newMat2))))
+
+  (when (moveV fila col fila derecha currPlayer matrix)
+    (define newMat (matrix-set lista fila derecha simbolo))
+    (define newMat2 (matrix-set newMat fila col '#\ ))
+
+    (define h (getHash newMat2 0 0 0 1))
+    (when (not (member h listaHashes))
+      (begin
+        (set! listaHashes (append listaHashes '(h)))
+        (set! retorno (append retorno newMat2))
+        (displayln "der")
+        (displayln fila)
+        (displayln col)
+        (displayln newMat2))))
+
+  retorno)
+
+(define (children matrix i j simbolo)
   (when (< i (length matrix))
-    (if(< j (length matrix))
-       (begin
-         
-        
-          (hagoJugada matrix  i j simbolo)
-        
-        
-         (children matrix  i (+ j 1) simbolo)
-         
-                  
-        )
-       (children matrix  (+ i 1) 0 simbolo)
-       
-       
-       )    
-      )
-  
-  )
+    (if (< j (length matrix))
+        (begin
+
+          (hagoJugada matrix i j simbolo)
+
+          (children matrix i (+ j 1) simbolo))
+        (children matrix (+ i 1) 0 simbolo))))
 (define (minimaxAndIterator matrix i j)
   (if (>= i (length matrix))
       (display #\newline)
@@ -560,8 +515,6 @@
             (display #\newline)
             (display #\|)
             (minimaxAndIterator matrix (+ i 1) 0)))))
-
-
 
 (define (run-menu)
 
