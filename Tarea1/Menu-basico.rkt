@@ -17,6 +17,7 @@
 ; Made by Ricardo Soto && Brandon Redondo
 
 (struct player (symbol moves moveQuant) #:mutable)
+(define break-loop #f)
 
 ; Función que crea una matriz de 6x5.
 (define matriz (build-list 6 (lambda (i) (build-list 5 (lambda (j) '#\ )))))
@@ -430,10 +431,10 @@
         (set! cnd (moveValidPieces currPlayer)))
       (begin
         (displayln "JUGADA DE LA IA:")
-        (set! playIA (maxim (list matriz #f) "O" 50000 (list)))
+        (set! playIA (maxim (list matriz #f) "O" 50000 (list) -10000 10000))
         (displayln playIA)
-        (set! second (maxim playIA "O" 50000 (list)))
-        (displayln second)
+        ;(set! second (maxim playIA "O" 50000 (list)))
+        ;(displayln second)
         (set! matriz (list-ref playIA 0))
 
         (set! hashGen (hash))
@@ -567,47 +568,9 @@
 ; Función max
 ; Entrada: Tablero, Jugador Actual, Profundidad
 ; Salida: Maxixmo valor
-(define (maxim matrix currPlayer depth ret)
+(define (maxim matrix currPlayer depth ret alpha beta)
 
-  (define simbolocontrario #\ )
-
-  (if (equal? currPlayer "O") (set! simbolocontrario "X") (set! simbolocontrario "O"))
-  (define count (countSimbolo2 (list-ref matrix 0) 0 0 0 simbolocontrario))
-  ; en la posición 1 está si forma una línea o no
-  (define formal (list-ref matrix 1))
-  (define hijos (list))
-  (if formal ;Si se forma una linea
-      (set! hijos
-            (hijosQuitarRival (list-ref matrix 0)
-                              0
-                              0
-                              currPlayer
-                              '())) ;Expande el árbol quitando una ficha al rival
-      (set! hijos (children (list-ref matrix 0) 0 0 currPlayer '()))) ;Si no, expande el árbol
-
-  (if (and (> count 2) (> (length hijos) 1))
-      (begin
-
-        (map (lambda (x)
-
-               (define move (minim x simbolocontrario (- depth 1) ret))
-               (define maxEval -100000)
-               (define m (max maxEval (list-ref move 1))) ;Maximo entre maax y
-
-               (define mat (list-ref move 0))
-
-               (set! ret (list mat m (list-ref x 1))))
-             hijos)
-
-        ret)
-
-      (list (list-ref matrix 0) (* depth -1) formal)))
-
-; Función min
-; Entrada: Tablero, Jugador Actual, Profundidad
-; Salida: Minimo valor
-(define (minim matrix currPlayer depth ret)
-
+  (define maxEval 100000)
   (define simbolocontrario #\ )
   (if (equal? currPlayer "O")
       (set! simbolocontrario "X")
@@ -621,20 +584,74 @@
       (set! hijos (hijosQuitarRival (list-ref matrix 0) 0 0 currPlayer '()))
       (set! hijos (children (list-ref matrix 0) 0 0 currPlayer '())))
   (if (and (> count 2) (> (length hijos) 1))
+      
       (begin
 
-        (map (lambda (x)
-
-               (define move (maxim x simbolocontrario (- depth 1) ret))
-               (define minEval 100000)
-               (define m (min minEval (list-ref move 1)))
-
-               (define mat (list-ref move 0))
-
-               (set! ret (list mat m (list-ref x 1))))
-             hijos)
+        (for ([x hijos])
+          
+          (define move (minim x simbolocontrario (- depth 1) ret alpha beta))
+          (define m (max maxEval (list-ref move 1)))
+          (define mat (list-ref move 0))
+          (set! alpha (max beta m))
+          ;#:break(<= beta alpha)
+          (set! ret (list mat m (list-ref x 1)))) ; retornar
         ret)
-      (list (list-ref matrix 0) depth formal)))
+        ;(map (lambda (x)
+
+         ;     (define move (maxim x simbolocontrario (- depth 1) ret))
+         ;     (define minEval 100000)
+         ;     (define m (min minEval (list-ref move 1)))
+
+         ;     (define mat (list-ref move 0))
+
+         ;     (set! ret (list mat m (list-ref x 1))))
+         ;   hijos)
+        ; ret)
+  (list (list-ref matrix 0) depth formal)))
+
+; Función min
+; Entrada: Tablero, Jugador Actual, Profundidad
+; Salida: Minimo valor
+(define (minim matrix currPlayer depth ret alpha beta)
+
+  (define minEval 100000)
+  (define simbolocontrario #\ )
+  (if (equal? currPlayer "O")
+      (set! simbolocontrario "X")
+      (set! simbolocontrario "O")) ;Se define el jugador contrario
+
+  (define count (countSimbolo2 (list-ref matrix 0) 0 0 0 simbolocontrario))
+  (define formal (list-ref matrix 1))
+  (define hijos (list))
+
+  (if formal
+      (set! hijos (hijosQuitarRival (list-ref matrix 0) 0 0 currPlayer '()))
+      (set! hijos (children (list-ref matrix 0) 0 0 currPlayer '())))
+  (if (and (> count 2) (> (length hijos) 1))
+      
+      (begin
+
+        (for ([x hijos])
+          
+          (define move (maxim x simbolocontrario (- depth 1) ret alpha beta))
+          (define m (min minEval (list-ref move 1)))
+          (define mat (list-ref move 0))
+          (set! beta (min beta m))
+          ;#:break(<= beta alpha)
+          (set! ret (list mat m (list-ref x 1)))) ; retornar
+        ret)
+        ;(map (lambda (x)
+
+         ;     (define move (maxim x simbolocontrario (- depth 1) ret))
+         ;     (define minEval 100000)
+         ;     (define m (min minEval (list-ref move 1)))
+
+         ;     (define mat (list-ref move 0))
+
+         ;     (set! ret (list mat m (list-ref x 1))))
+         ;   hijos)
+        ; ret)
+  (list (list-ref matrix 0) depth formal)))
 
 ; Función principal que inicia el juego
 ; Entrada: -
