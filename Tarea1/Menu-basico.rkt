@@ -736,7 +736,7 @@
   
     
     
-    (when (or(<(length hijos)1)(<= count 2))
+    (when (or(<(length hijos)1)(>= count 2))
        (begin
          (when (equal? currPlayer "X")
            (set! staticEval  (* staticEval -1))
