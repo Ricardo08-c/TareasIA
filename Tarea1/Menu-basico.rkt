@@ -190,9 +190,10 @@
   (display " 0     1     2     3     4   \n")
   (display #\|)
   (displayMat matriz 0 0)
-  (if (countSimbolo 0 0 0 "O")
+   
+  (if (or (countSimbolo 0 0 0 "O") (=(length (children matriz 0 0 "O" '()) )0))
       (displayln "El ganador es X")
-      (if (countSimbolo 0 0 0 "X")
+      (if ((or (countSimbolo 0 0 0 "X") (=(length (children matriz 0 0 "X" '()) )0)))
           (displayln "El ganador es O")
           (displayPlayMenu player1 player2 currPlayer))))
 
@@ -606,8 +607,8 @@
   (define hijos (list))
 (when formal
   
-    (set! currPlayer simbolocontrario)
   
+      (set! currPlayer simbolocontrario)
     
       (if (equal? currPlayer "O")
        (begin
@@ -620,6 +621,7 @@
        (set! funcEval #f)
       )
       )
+    
   
 
       )
@@ -631,7 +633,8 @@
       (set! hijos (hijosQuitarRival (list-ref matrix 0) 0 0 currPlayer '()))
       
       (set! hijos (children (list-ref matrix 0) 0 0 currPlayer '())))
-  
+   
+ 
   (if maxima   
   (if (and (> count 2) (> count2 2) (>= (length hijos) 1))
       
@@ -643,12 +646,14 @@
           (define m (max maxEval (list-ref move 1)))
           (define mat (list-ref move 0))
           
-          (set! alpha (max beta m))
+          (set! alpha (max alpha m))
           
-          
+           (if (equal? m (list-ref move 1))
               (set! ret (list mat m (list-ref x 1))) ; retornar
-            
-            
+               (set! ret (list (list-ref matrix 0) m (list-ref x 1)))
+               ) ; reto
+            ;#:break(<= beta alpha)
+          #\
               
           ;(set! ret (list mat m (list-ref x 1))) ; retornar          
           
@@ -676,6 +681,8 @@
   (begin
   
   
+  
+   
     
     
     (list (list-ref matrix 0) staticEval formal))
@@ -695,7 +702,12 @@
           
               
           
+               (if (equal? m (list-ref move 1))
               (set! ret (list mat m (list-ref x 1))) ; retornar
+               (set! ret (list (list-ref matrix 0) m (list-ref x 1)))
+               ) ; reto
+          ;#:break(<= beta alpha)
+          #\
             
               
           ;(set! ret (list mat m (list-ref x 1))) ; retornar
@@ -724,6 +736,18 @@
   
     
     
+    (when (or(<(length hijos)1)(<= count 2))
+       (begin
+         (when (equal? currPlayer "X")
+           (set! staticEval  (* staticEval -1))
+           
+           )
+         
+        
+       
+       
+       )       
+      )
     (list (list-ref matrix 0) staticEval formal)))
   )
   
