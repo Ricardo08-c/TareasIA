@@ -23,6 +23,8 @@
 (define matriz (build-list 6 (lambda (i) (build-list 5 (lambda (j) '#\ )))))
 (define hashGen (hash))
 
+(define ultimasJugadas (hash '"O" "" '"X" ""))
+
 ; Función que despligue el menú principal.
 (define (display-menu)
   (displayln "Menu:")
@@ -72,23 +74,25 @@
 ; Función que obtiene el hash de una matriz, se utiliza como la utilidad
 ; Entrada:
 ; Salida: El valor del hash
-(define (getHash matrix i j hash suma)
-  (define simbolo 0)
-  (if (>= i (length matrix))
-      hash
+(define (getHash matris i j suma)
+  
+  
 
-      (if (< j (length (list-ref matrix i)))
+  (if (>= i (length matris))
+      suma
+      
+      (if (< j (length (list-ref matris i)))
           (begin
+            
+            (set! suma (append suma (list (list-ref(list-ref matris i) j))))
+            (getHash matris i (+ j 1 ) suma)
+            
 
-            (set! simbolo (list-ref (list-ref matrix i) j))
-            (if (equal? simbolo "O")
-                (set! hash (+ hash (* suma 2)))
-                (if (equal? simbolo "X") (set! hash (+ hash (* suma 1))) (set! hash hash)))
-
-            (getHash matrix i (+ j 1) hash (+ suma 1)))
-          (begin
-
-            (getHash matrix (+ i 1) 0 hash (+ suma 1))))))
+            )
+          (getHash matris (+ i 1) 0 suma)
+          )
+      )
+  )
 
 ; Función que hace el movimiento de pieza.
 ; Entrada: La matriz y el jugador actual
@@ -193,7 +197,7 @@
    
   (if (or (countSimbolo 0 0 0 "O") (=(length (children matriz 0 0 "O" '()) )0))
       (displayln "El ganador es X")
-      (if ((or (countSimbolo 0 0 0 "X") (=(length (children matriz 0 0 "X" '()) )0)))
+      (if (or (countSimbolo 0 0 0 "X") (=(length (children matriz 0 0 "X" '()) )0))
           (displayln "El ganador es O")
           (displayPlayMenu player1 player2 currPlayer))))
 
@@ -272,7 +276,7 @@
   (define volcado
     (list-set (list-ref matriz filaDes) colDes (list-ref (list-ref matriz filaIn) colIn)))
   (define cond (moveIsValid filaIn colIn filaDes colDes currPlayer))
-  (when (or(formaLinea matriz filaDes colDes simbolo 4)
+  (when (or
                         (formaLinea matriz filaDes colDes simbolo 5)
                         (formaLinea matriz filaDes colDes simbolo 6))
     (set! cond #f)    
@@ -337,17 +341,17 @@
 ; Función que verifica si se formó una linea consecutiva de tres carácteres iguales
 ; Entrada: Fila, Columna, Caracter
 ; Salida: True/False
-(define (formaLinea matriz fila col caracter cantidad)
+(define (formaLinea matrix fila col caracter cantidad)
+  (define matri (append (list) matrix))
+  (define ancho (length (first matri))) ; ancho de la matriz
   
-  (define ancho (length (first matriz))) ; ancho de la matriz
-  
-  (define auxMat (matrix-set matriz fila col caracter))
-  
-  
+  (define auxMat (matrix-set matri fila col caracter))
   
   
   
-  (define alto (length matriz)) ; alto de la matriz
+  
+  
+  (define alto (length matrix)) ; alto de la matriz
   (define (enRango f c) ; verifica que una posición está dentro del rango de la matriz
     (and (>= f 0) (< f alto) (>= c 0) (< c ancho)))
   
@@ -392,9 +396,13 @@
   
   
      (define cond1(verificarVerti fila col 0))
-       (set! auxMat (matrix-set matriz fila col caracter))
+     
+       (set! auxMat (matrix-set matri fila col caracter))
       
-      (or cond1 (verificarHori fila col 0))) ; se forma línea hacia la derecha
+      (define l(or cond1 (verificarHori fila col 0)))
+  
+  l
+  ) ; se forma línea hacia la derecha
 
 ; Función que genera un número de fila aleatorio
 (define (randomRowNumber)
@@ -411,12 +419,12 @@
   (define row (randomRowNumber))
   (define column (randomColumnNumber))
   (define simbolo (player-symbol currPlayer))
-
+  (define space (list-ref(list-ref matriz row ) column))  
   (define anterior (list-set (list-ref matriz row) column simbolo))
   (if (not (countFilledSpaces 0 0 0))
       (begin
-
-        (if (not (formaLinea matriz row column simbolo 3))
+        
+        (if (and(not (formaLinea matriz row column simbolo 3)) (equal? space  #\ ))
             (begin
               (set! matriz (list-set matriz row anterior))
               (if (equal? currPlayer player1) (set! currPlayer player2) (set! currPlayer player1))
@@ -426,23 +434,73 @@
       #\
 ))
 
+
+(define (contar-simbolo simbolo matriz)
+  (let ([filas (length matriz)] [columnas (length (car matriz))])
+    (define (contar-fila fila)
+      (length (filter (lambda (elemento) (equal? elemento simbolo)) fila)))
+    (apply + (map contar-fila matriz))))
+
+; Función que retornar la utilidad de una matriz
+; Entrada: La matriz a analizar y el jugador actual
+; Salida: La diferencia entre las fichas de un jugador menos el otro.
+(define (utilidad matrizAnalizada currPlayer)
+  (define simbolo currPlayer)
+  (define countX (contar-simbolo "X" matrizAnalizada))
+  (define countY (contar-simbolo "O" matrizAnalizada))
+  
+  
+  
+  
+  (if (equal? simbolo "X") (- countX countY) (- countY countX)))
+
+; Función que elimina una ficha del jugador contrario solicitando cual captura mediante input
+; Entrada: Jugador Actual
+; Salida: Elemento removido de la matriz
+
+
 ; Maquina menu
 ; Entrada: Los jugadores
 ; Salida: El movimiento por la IA
 (define (machine player1 player2 currPlayer)
   (define playIA #\ )
   (define cnd #f)
-  (define second #\ )
+  (define child #\ )
+  (define saveMove #\ )
+  (define play2 #\ )
+  (define profundidad 7 )
+  
+ 
   (if (equal? (player-symbol currPlayer) "X")
       (begin
         (displayln (string-append "Turno de: X"))
         (set! cnd (moveValidPieces currPlayer)))
       (begin
         (displayln "JUGADA DE LA IA:")
-        (set! playIA (maxim (list matriz #f) "O" 50000 (list matriz 50000 #f) -10000000 10000000 #t))
+                 (set! hashGen (hash))
+ 
+  (set! hashGen (hash))
+  
+  
+ 
+        (set! playIA (maxim (list matriz #f) "O" profundidad (list matriz 0 #f) -10000000 10000000 #t))
+        
+        (set! hashGen (hash))
+        (display "JUGADA INICIAL: ")
         (displayln playIA)
-        ;(set! second (maxim playIA "O" 50000 (list)))
-        ;(displayln second)
+        ; si forma linea se debe de volver a jugar
+        (when (list-ref playIA 2 )
+          (set! playIA (maxim (list (list-ref playIA 0) #t) "X" profundidad (list (list-ref playIA 0) 0 #t) -10000000 10000000 #f))
+          
+          )
+        (set! hashGen (hash))
+        
+        (set! saveMove (list-ref playIA 3))
+          (set! ultimasJugadas (hash-set ultimasJugadas "O" saveMove))
+          
+        
+        (displayln playIA)
+        
         (set! matriz (list-ref playIA 0))
 
         (set! hashGen (hash))
@@ -455,9 +513,9 @@
   (display " 0     1     2     3     4   \n")
   (display #\|)
   (displayMat matriz 0 0)
-  (if (countSimbolo 0 0 0 "O")
+   (if (or (countSimbolo 0 0 0 "O"))
       (displayln "El ganador es X")
-      (if (countSimbolo 0 0 0 "X")
+      (if (or (countSimbolo 0 0 0 "X") )
           (displayln "El ganador es O")
           (machine player1 player2 currPlayer))))
 
@@ -470,74 +528,83 @@
   (define izquierda (- col 1))
   (define derecha (+ col 1))
   (define retorno (list))
-
+(define newMat2 '())
   (define lista (append matrix '()))
   (define simbolo currPlayer)
 
   ;Valida jugada hacia abajo de la ficha
-  (when (moveV fila col abajo col currPlayer matrix)
+  
+  (when (moveV fila col abajo col currPlayer lista)
     (define newMat (matrix-set lista abajo col simbolo))
-    (define newMat2 (matrix-set newMat fila col '#\ ))
+    (set! newMat2 (matrix-set newMat fila col '#\ ))
 
-    (define h (getHash newMat2 0 0 0 1))
+    (define h (getHash newMat2 0 0 (list)))
+    (define move (list abajo col))
     (define formaMas (or(formaLinea newMat2 abajo col simbolo 4)
-                        (formaLinea newMat2 abajo col simbolo 5)
-                        (formaLinea newMat2 abajo col simbolo 6)))
+                        ))
     
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas))
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
       (begin
         (set! hashGen (hash-set hashGen h #t))
+        
         (define forma (formaLinea newMat2 abajo col simbolo 3))
-        (set! retorno (append retorno (list (list newMat2 forma)))))))
-
+        
+        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
+  (set! lista (append matrix '()))
   ;Valida jugada hacia arriba de la ficha
-  (when (moveV fila col arriba col currPlayer matrix)
+  
+  (when (moveV fila col arriba col currPlayer lista)
     (define newMat (matrix-set lista arriba col simbolo))
-    (define newMat2 (matrix-set newMat fila col '#\ ))
+    (set! newMat2 (matrix-set newMat fila col '#\ ))
     (define formaMas (or(formaLinea newMat2 arriba col simbolo 4)
-                        (formaLinea newMat2 arriba col simbolo 5)
-                        (formaLinea newMat2 arriba col simbolo 6)))
+                       ))
     
-    (define h (getHash newMat2 0 0 0 1))
-
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas))
+    (define h (getHash newMat2 0 0 (list)))
+    (define move (list arriba col))
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
       (begin
         
         (set! hashGen (hash-set hashGen h #t))
+        
         (define forma (formaLinea newMat2 arriba col simbolo 3))
         
-        (set! retorno (append retorno (list (list newMat2 forma)))))))
-
+        
+        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
+(set! lista (append matrix '()))
   ;Valida jugada hacia la izquierda
-  (when (moveV fila col fila izquierda currPlayer matrix)
+  
+  (when (moveV fila col fila izquierda currPlayer lista)
     (define newMat (matrix-set lista fila izquierda simbolo))
-    (define newMat2 (matrix-set newMat fila col '#\ ))
+    (set! newMat2 (matrix-set newMat fila col '#\ ))
     (define formaMas (or(formaLinea newMat2 fila izquierda simbolo 4)
-                        (formaLinea newMat2 fila izquierda simbolo 5)
-                        (formaLinea newMat2 fila izquierda simbolo 6)))
+                        ))
 
-    (define h (getHash newMat2 0 0 0 1))
-
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas))
+    (define h (getHash newMat2 0 0 (list)))
+    (define move (list fila izquierda))
+    
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
       (begin
         (set! hashGen (hash-set hashGen h #t))
         (define forma (formaLinea newMat2 fila izquierda simbolo 3))
-        (set! retorno (append retorno (list (list newMat2 forma)))))))
-
+        
+        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
+(set! lista (append matrix '()))
   ;Valida jugada hacia la derecha
-  (when (moveV fila col fila derecha currPlayer matrix)
+  
+  (when (moveV fila col fila derecha currPlayer lista)
     (define newMat (matrix-set lista fila derecha simbolo))
-    (define newMat2 (matrix-set newMat fila col '#\ ))
-    (define formaMas (or(formaLinea newMat2 fila derecha simbolo 4)
-                        (formaLinea newMat2 fila derecha simbolo 5)
-                        (formaLinea newMat2 fila derecha simbolo 6)))
-    (define h (getHash newMat2 0 0 0 1))
-
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas))
+    (set! newMat2 (matrix-set newMat fila col '#\ ))
+    (define formaMas (formaLinea newMat2 fila derecha simbolo 4))
+    (define h (getHash newMat2 0 0 (list)))
+    (define move (list fila derecha))
+    ;(not(equal? move (hash-ref ultimasJugadas simbolo)))
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
       (begin
         (set! hashGen (hash-set hashGen h #t))
         (define forma (formaLinea newMat2 fila derecha simbolo 3))
-        (set! retorno (append retorno (list (list newMat2 forma)))))))
+        
+        
+        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
 
   retorno)
 
@@ -546,9 +613,9 @@
 ; Salida: Tablero hijo
 (define (children matrix i j simbolo lista)
   
-  (if (< i (length matrix))
+  (if (< i 6)
       (begin
-        (if (< j (length (list-ref matrix i)))
+        (if (< j 5)
             (begin
 
               (set! lista (append lista (hagoJugada matrix i j simbolo)))
@@ -566,20 +633,20 @@
 
 
   (if (equal? simbolo "O") (set! simbolocontrario "X") (set! simbolocontrario "O"))
-  (define m matrix)
+  (define m (append matrix (list)))
   (when (equal? (list-ref (list-ref matrix i) j) simbolocontrario)
     (begin
       (set! m (matrix-set m i j '#\ ))
-      (set! retorno (append retorno (list (list m #f))))))
+      (set! retorno (append retorno (list (list m #f i j ))))))
   retorno)
 
 ; Función que quita una ficha enemiga
 ; Entrada: Tablero, fila, columna, jugador, lista de hash
 ; Salida: Los hijos del tablero con una ficha enemiga removida
 (define (hijosQuitarRival matrix i j simbolo lista)
-  (if (< i (length matrix))
+  (if (< i 6)
       (begin
-        (if (< j (length (list-ref matrix i)))
+        (if (< j 5)
             (begin
 
               (set! lista (append lista (jugadaQuitar matrix i j simbolo)))
@@ -594,65 +661,102 @@
 (define (maxim matrix currPlayer depth ret alpha beta maxima)
 
   (define maxEval -10000000)
+  (define simboloAJugar #\ )
   (define minEval 10000000)
   (define funcEval maxima)
+  (define retTemp '())
+  
   (define simbolocontrario #\ )
-   (define staticEval depth)
+   (define staticEval 0)
   (if (equal? currPlayer "O")
+      (begin
        (set! simbolocontrario "X")
+       
+       )
+       
        
       (set! simbolocontrario "O")
       ) ;Se define el jugador contrario
 (define formal (list-ref matrix 1))
   (define hijos (list))
-(when formal
+
   
+ ;(display currPlayer)
+  ;(display simbolocontrario)
+ 
+  (if formal
+            (begin      
   
-      (set! currPlayer simbolocontrario)
-    
+      
+      
       (if (equal? currPlayer "O")
        (begin
+         (set! simboloAJugar "O")
+         (set! currPlayer "X")
+      (set! simbolocontrario "O")
         
-       (set! simbolocontrario "X")
-       (set! funcEval #t)
+      
+       (set! funcEval #f)
        )
        (begin
-      (set! simbolocontrario "O")
-       (set! funcEval #f)
+         
+      (set! simboloAJugar "X")
+      (set! currPlayer "O")
+      (set! simbolocontrario "X")
+       (set! funcEval #t)
       )
       )
-    
+      
+      )
+     
+      (begin
+        (set! funcEval (not funcEval))
+            (set! simboloAJugar simbolocontrario)
+            )
+      
+      )
+   
   
-
-      )
   (define count (countSimbolo2 (list-ref matrix 0) 0 0 0 simbolocontrario))
   (define count2 (countSimbolo2 (list-ref matrix 0) 0 0 0 currPlayer))
- 
+
+  
+  
   (if formal
       
       (set! hijos (hijosQuitarRival (list-ref matrix 0) 0 0 currPlayer '()))
       
       (set! hijos (children (list-ref matrix 0) 0 0 currPlayer '())))
-   
  
   (if maxima   
-  (if (and (> count 2) (> count2 2) (>= (length hijos) 1))
+  (if (and (> count 2) (> count2 2) (>= (length hijos) 1) (> depth 0) )
       
       (begin
         
+        
         (for ([x hijos])
          ;#:final(<= beta alpha)
-          (define move (maxim x simbolocontrario (- depth 1) ret alpha beta funcEval))
-          (define m (max maxEval (list-ref move 1)))
+          (define move (maxim x simboloAJugar (- depth 1) ret alpha beta funcEval))
+          (set! maxEval (max maxEval (list-ref move 1)))
           (define mat (list-ref move 0))
           
-          (set! alpha (max alpha m))
+          (set! alpha (max alpha (list-ref move 1)))
           
-           (if (equal? m (list-ref move 1))
-              (set! ret (list mat m (list-ref x 1))) ; retornar
-               (set! ret (list (list-ref matrix 0) m (list-ref x 1)))
-               ) ; reto
-            ;#:break(<= beta alpha)
+          
+              
+             (set! ret (list-set ret 1 maxEval))
+          (when(= maxEval (list-ref move 1))
+             (set! ret (list (list-ref x 0 ) maxEval (list-ref x 1) (list(list-ref x 2) (list-ref x 3))))
+               
+               )
+              
+              
+
+               
+          
+               
+            
+          #:break(<= beta alpha)
           #\
               
           ;(set! ret (list mat m (list-ref x 1))) ; retornar          
@@ -664,49 +768,44 @@
          
           )
         
+        
           ret
         )
       
-        ;(map (lambda (x)
-
-         ;     (define move (maxim x simbolocontrario (- depth 1) ret))
-         ;     (define minEval 100000)
-         ;     (define m (min minEval (list-ref move 1)))
-
-         ;     (define mat (list-ref move 0))
-
-         ;     (set! ret (list mat m (list-ref x 1))))
-         ;   hijos)
-        ; ret)
+      
   (begin
   
+  (set! staticEval(utilidad (list-ref matrix 0) "O"))
+ 
   
   
-   
-    
     
     (list (list-ref matrix 0) staticEval formal))
   )  
-  (if (and (> count 2) (> count2 2) (>= (length hijos) 1))
+  (if (and (> count 2) (> count2 2) (>= (length hijos) 1) (> depth 0))
       
       (begin
-
+         
+         
         (for ([x hijos])
           
          ;#:final(<= beta alpha)
-          (define move (maxim x simbolocontrario (- depth 1) ret alpha beta funcEval))
-          (define m (min minEval (list-ref move 1)))
+          (define move (maxim x simboloAJugar (- depth 1) ret alpha beta funcEval))
+          (set! minEval (min minEval (list-ref move 1)))
           
           (define mat (list-ref move 0))
-          (set! beta (min beta m))
+          (set! beta (min beta (list-ref move 1)))
           
               
-          
-               (if (equal? m (list-ref move 1))
-              (set! ret (list mat m (list-ref x 1))) ; retornar
-               (set! ret (list (list-ref matrix 0) m (list-ref x 1)))
-               ) ; reto
-          ;#:break(<= beta alpha)
+          (set! ret (list-set ret 1 minEval))
+          (when(= minEval (list-ref move 1))
+             (set! ret (list (list-ref x 0 ) minEval (list-ref x 1) (list(list-ref x 2) (list-ref x 3))))
+               
+               )
+              
+           
+         
+          #:break(<= beta alpha)
           #\
             
               
@@ -717,37 +816,19 @@
           
           )
            ; retornar
+        
+        
         ret)
-        ;(map (lambda (x)
-
-         ;     (define move (maxim x simbolocontrario (- depth 1) ret))
-         ;     (define minEval 100000)
-         ;     (define m (min minEval (list-ref move 1)))
-
-         ;     (define mat (list-ref move 0))
-
-         ;     (set! ret (list mat m (list-ref x 1))))
-         ;   hijos)
-        ; ret)
+        
       
   
   (begin
   
   
+    (set! staticEval(utilidad (list-ref matrix 0) "O"))
+   
+     
     
-    
-    (when (or(<(length hijos)1)(>= count 2))
-       (begin
-         (when (equal? currPlayer "X")
-           (set! staticEval  (* staticEval -1))
-           
-           )
-         
-        
-       
-       
-       )       
-      )
     (list (list-ref matrix 0) staticEval formal)))
   )
   
@@ -760,6 +841,8 @@
 ; Salida: Juego de Dara
 (define (run-menu)
 
+  
+  
   (define player1 (player "X" list 0))
   (define player2 (player "O" list 0))
   (define currPlayer player1)
@@ -795,61 +878,3 @@
 (run-menu)
 
 
-(define (forma4 matriz fila col caracter)
-  (define ancho (length (first matriz))) ; ancho de la matriz
-  (define alto (length matriz)) ; alto de la matriz
-  (define (enRango f c) ; verifica que una posición está dentro del rango de la matriz
-    (and (>= f 0) (< f alto) (>= c 0) (< c ancho)))
-
-  (define (verificarArriba f c n)
-    (cond
-      [(= n 3) #t] ; si ya se encontraron tres caracteres consecutivos, se ha formado la línea
-      [(not (enRango f c)) #f] ; si estamos fuera de la matriz, la línea no se ha formado
-      [(not (eq? (list-ref (list-ref matriz f) c) caracter))
-       #f] ; si el caracter en esta posición no es el buscado, la línea no se ha formado
-      [else
-       (verificarArriba
-        (- f 1)
-        c
-        (+ n 1))])) ; si seguimos buscando arriba, incrementamos la cuenta de caracteres consecutivos
-
-  (define (verificarAbajo f c n)
-    (cond
-      [(= n 3) #t]
-      [(not (enRango f c)) #f]
-      [(not (eq? (list-ref (list-ref matriz f) c) caracter)) #f]
-      [else (verificarAbajo (+ f 1) c (+ n 1))]))
-
-  (define (verificarIzquierda f c n)
-    (cond
-      [(= n 3) #t]
-      [(not (enRango f c)) #f]
-      [(not (eq? (list-ref (list-ref matriz f) c) caracter)) #f]
-      [else (verificarIzquierda f (- c 1) (+ n 1))]))
-
-  (define (verificarDerecha f c n)
-    (cond
-      [(= n 3) #t]
-      [(not (enRango f c)) #f]
-      [(not (eq? (list-ref (list-ref matriz f) c) caracter)) #f]
-      [else (verificarDerecha f (+ c 1) (+ n 1))]))
-  (define (verificarMedioVert f c n)
-    (cond
-      [(= n 3) #t]
-      [(not (enRango f c)) #f]
-      [(not (eq? (list-ref (list-ref matriz f) c) caracter)) #f]
-      [else (verificarMedioVert (+ f 2) c (+ n 1))]))
-  (define (verificarMedioHor f c n)
-    (cond
-      [(= n 3) #t]
-      [(not (enRango f c)) #f]
-      [(not (eq? (list-ref (list-ref matriz f) c) caracter)) #f]
-      [else (verificarMedioVert f (+ c 2) (+ n 1))]))
-  (or (eq? (list-ref (list-ref matriz fila) col) 0)
-      #f
-      (verificarArriba (- fila 1) col 0) ; se forma línea hacia arriba
-      (verificarAbajo (+ fila 1) col 0) ; se forma línea hacia abajo
-      (verificarIzquierda fila (- col 1) 0) ; se forma línea hacia la izquierda
-      (verificarMedioVert (- fila 1) col 0) ; se forma línea vertical en el medio
-      (verificarMedioHor fila (- col 1) 0) ; se forma línea horizontal en el medio
-      (verificarDerecha fila (+ col 1) 0))) ; se forma línea hacia la derecha
