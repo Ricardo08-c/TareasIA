@@ -23,7 +23,7 @@
 (define matriz (build-list 6 (lambda (i) (build-list 5 (lambda (j) '#\ )))))
 (define hashGen (hash))
 
-(define ultimasJugadas (hash '"O" "" '"X" ""))
+(define ultimasJugadas (hash '"O" (list(list ) (list)) '"X" (list(list ) (list))))
 
 ; Función que despligue el menú principal.
 (define (display-menu)
@@ -276,16 +276,16 @@
   (define volcado
     (list-set (list-ref matriz filaDes) colDes (list-ref (list-ref matriz filaIn) colIn)))
   (define cond (moveIsValid filaIn colIn filaDes colDes currPlayer))
-  (when (or
-                        (formaLinea matriz filaDes colDes simbolo 5)
-                        (formaLinea matriz filaDes colDes simbolo 6))
-    (set! cond #f)    
-            )
+  ;(when 
+                        ;(formaLinea matriz filaDes colDes simbolo 4)
+                        
+    ;(set! cond #f)             )
   (if cond
 
       (set! matriz (list-set matriz filaDes volcado))
 
       #\
+      
 )
   (define anterior (list-set (list-ref matriz filaIn) colIn #\ ))
 
@@ -466,9 +466,10 @@
   (define playIA #\ )
   (define cnd #f)
   (define child #\ )
-  (define saveMove #\ )
+  (define saveMove1 #\ )
+  (define saveMove2 #\ )
   (define play2 #\ )
-  (define profundidad 7 )
+  (define profundidad 6 )
   
  
   (if (equal? (player-symbol currPlayer) "X")
@@ -489,14 +490,16 @@
         (display "JUGADA INICIAL: ")
         (displayln playIA)
         ; si forma linea se debe de volver a jugar
+        (set! saveMove1 (list-ref playIA 3 ))
+        (set! saveMove2 (list-ref playIA 4))
+          (set! ultimasJugadas (hash-set ultimasJugadas "O" (list saveMove1 saveMove2)))
         (when (list-ref playIA 2 )
           (set! playIA (maxim (list (list-ref playIA 0) #t) "X" profundidad (list (list-ref playIA 0) 0 #t) -10000000 10000000 #f))
           
           )
         (set! hashGen (hash))
         
-        (set! saveMove (list-ref playIA 3))
-          (set! ultimasJugadas (hash-set ultimasJugadas "O" saveMove))
+        
           
         
         (displayln playIA)
@@ -539,17 +542,23 @@
     (set! newMat2 (matrix-set newMat fila col '#\ ))
 
     (define h (getHash newMat2 0 0 (list)))
-    (define move (list abajo col))
+    
+    (define ini (list fila col))
+    (define des (list abajo col))
+    (define moves (hash-ref ultimasJugadas simbolo))
+    (define cond (not(and(equal? ini (list-ref moves 1)) (equal? des (list-ref moves 0)))))
+   
+    
     (define formaMas (or(formaLinea newMat2 abajo col simbolo 4)
                         ))
     
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) cond)
       (begin
         (set! hashGen (hash-set hashGen h #t))
         
         (define forma (formaLinea newMat2 abajo col simbolo 3))
         
-        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
+        (set! retorno (append retorno (list (list newMat2 forma fila col abajo col)))))))
   (set! lista (append matrix '()))
   ;Valida jugada hacia arriba de la ficha
   
@@ -560,8 +569,14 @@
                        ))
     
     (define h (getHash newMat2 0 0 (list)))
+      (define ini (list fila col))
+    (define des (list abajo col))
+    (define moves (hash-ref ultimasJugadas simbolo))
+    (define cond (not(and(equal? ini (list-ref moves 1)) (equal? des (list-ref moves 0)))))
+   
+    
     (define move (list arriba col))
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) cond)
       (begin
         
         (set! hashGen (hash-set hashGen h #t))
@@ -569,8 +584,8 @@
         (define forma (formaLinea newMat2 arriba col simbolo 3))
         
         
-        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
-(set! lista (append matrix '()))
+        (set! retorno (append retorno (list (list newMat2 forma fila col arriba col)))))))
+  (set! lista (append matrix '()))
   ;Valida jugada hacia la izquierda
   
   (when (moveV fila col fila izquierda currPlayer lista)
@@ -580,14 +595,20 @@
                         ))
 
     (define h (getHash newMat2 0 0 (list)))
+      (define ini (list fila col))
+    (define des (list fila izquierda))
+    (define moves (hash-ref ultimasJugadas simbolo))
+    (define cond (not(and(equal? ini (list-ref moves 1)) (equal? des (list-ref moves 0)))))
+   
+    
     (define move (list fila izquierda))
     
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) cond)
       (begin
         (set! hashGen (hash-set hashGen h #t))
         (define forma (formaLinea newMat2 fila izquierda simbolo 3))
         
-        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
+        (set! retorno (append retorno (list (list newMat2 forma fila col fila izquierda)))))))
 (set! lista (append matrix '()))
   ;Valida jugada hacia la derecha
   
@@ -596,15 +617,22 @@
     (set! newMat2 (matrix-set newMat fila col '#\ ))
     (define formaMas (formaLinea newMat2 fila derecha simbolo 4))
     (define h (getHash newMat2 0 0 (list)))
-    (define move (list fila derecha))
+      (define ini (list fila col))
+    (define des (list fila derecha))
+    
+    (define moves (hash-ref ultimasJugadas simbolo))
+    (define cond (not(and(equal? ini (list-ref moves 1)) (equal? des (list-ref moves 0)))))
+   
+    
+    ;(define move (list fila derecha))
     ;(not(equal? move (hash-ref ultimasJugadas simbolo)))
-    (when (and (not (hash-has-key? hashGen h)) (not formaMas) )
+    (when (and (not (hash-has-key? hashGen h)) (not formaMas) cond)
       (begin
         (set! hashGen (hash-set hashGen h #t))
         (define forma (formaLinea newMat2 fila derecha simbolo 3))
         
         
-        (set! retorno (append retorno (list (list newMat2 forma fila col)))))))
+        (set! retorno (append retorno (list (list newMat2 forma fila col fila derecha)))))))
 
   retorno)
 
@@ -637,7 +665,7 @@
   (when (equal? (list-ref (list-ref matrix i) j) simbolocontrario)
     (begin
       (set! m (matrix-set m i j '#\ ))
-      (set! retorno (append retorno (list (list m #f i j ))))))
+      (set! retorno (append retorno (list (list m #f i j 0 0 ))))))
   retorno)
 
 ; Función que quita una ficha enemiga
@@ -721,7 +749,9 @@
   (define count2 (countSimbolo2 (list-ref matrix 0) 0 0 0 currPlayer))
 
   
-  
+ 
+
+
   (if formal
       
       (set! hijos (hijosQuitarRival (list-ref matrix 0) 0 0 currPlayer '()))
@@ -735,7 +765,7 @@
         
         
         (for ([x hijos])
-         ;#:final(<= beta alpha)
+         
           (define move (maxim x simboloAJugar (- depth 1) ret alpha beta funcEval))
           (set! maxEval (max maxEval (list-ref move 1)))
           (define mat (list-ref move 0))
@@ -746,7 +776,8 @@
               
              (set! ret (list-set ret 1 maxEval))
           (when(= maxEval (list-ref move 1))
-             (set! ret (list (list-ref x 0 ) maxEval (list-ref x 1) (list(list-ref x 2) (list-ref x 3))))
+            
+             (set! ret (list (list-ref x 0 ) maxEval (list-ref x 1) (list(list-ref x 2) (list-ref x 3))  (list(list-ref x 4) (list-ref x 5))  ))
                
                )
               
@@ -759,7 +790,7 @@
           #:break(<= beta alpha)
           #\
               
-          ;(set! ret (list mat m (list-ref x 1))) ; retornar          
+                
           
           
           
@@ -789,7 +820,7 @@
          
         (for ([x hijos])
           
-         ;#:final(<= beta alpha)
+         
           (define move (maxim x simboloAJugar (- depth 1) ret alpha beta funcEval))
           (set! minEval (min minEval (list-ref move 1)))
           
@@ -799,7 +830,7 @@
               
           (set! ret (list-set ret 1 minEval))
           (when(= minEval (list-ref move 1))
-             (set! ret (list (list-ref x 0 ) minEval (list-ref x 1) (list(list-ref x 2) (list-ref x 3))))
+             (set! ret (list (list-ref x 0 ) minEval (list-ref x 1) (list(list-ref x 2) (list-ref x 3)) (list(list-ref x 4) (list-ref x 5))))
                
                )
               
@@ -809,7 +840,7 @@
           #\
             
               
-          ;(set! ret (list mat m (list-ref x 1))) ; retornar
+          
           
           
           
