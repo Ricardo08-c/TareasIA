@@ -268,10 +268,13 @@
   (define volcado
     (list-set (list-ref matriz filaDes) colDes (list-ref (list-ref matriz filaIn) colIn)))
   (define cond (moveIsValid filaIn colIn filaDes colDes currPlayer))
-  ;(when
-  ;(formaLinea matriz filaDes colDes simbolo 4)
+  (define mockupMat (append matriz '()))
+  (set! mockupMat (matrix-set mockupMat filaIn colIn #\ ))
+  (when
+  (formaLinea mockupMat filaDes colDes simbolo 4)
 
-  ;(set! cond #f)             )
+  (set! cond #f)             )
+  
   (if cond
 
       (set! matriz (list-set matriz filaDes volcado))
@@ -447,10 +450,11 @@
   (define saveMove1 #\ )
   (define saveMove2 #\ )
   (define play2 #\ )
-  (define profundidad 8)
+  (define profundidad 6)
 
   (if (equal? (player-symbol currPlayer) "X")
       (begin
+        
         (displayln (string-append "Turno de: X"))
         (set! cnd (moveValidPieces currPlayer)))
       (begin
@@ -460,7 +464,7 @@
         (set! hashGen (hash))
         
         (time (set! playIA
-              (maxim (list matriz #f) "O" profundidad (list matriz 0 #f) -10000000 10000000 #t)))
+              (maxim (list matriz #f) "O" profundidad (list matriz (utilidad matriz "O") #f) -10000000 10000000 #t)))
 
         (set! hashGen (hash))
         (display "JUGADA INICIAL: ")
@@ -474,7 +478,7 @@
                 (maxim (list (list-ref playIA 0) #t)
                        "X"
                        profundidad
-                       (list (list-ref playIA 0) 0 #t)
+                       (list (list-ref playIA 0) (utilidad matriz "O") #t)
                        -10000000
                        10000000
                        #f)))
@@ -683,14 +687,15 @@
               (set! simboloAJugar "O")
               (set! currPlayer "X")
               (set! simbolocontrario "O")
-
-              (set! funcEval #f))
+              (set! maxima #f)
+              (set! funcEval #t))
             (begin
 
               (set! simboloAJugar "X")
               (set! currPlayer "O")
               (set! simbolocontrario "X")
-              (set! funcEval #t))))
+              (set! maxima #t)
+              (set! funcEval #f))))
 
       (begin
         (set! funcEval (not funcEval))
@@ -698,7 +703,7 @@
 
   (define count (countSimbolo2 (list-ref matrix 0) 0 0 0 simbolocontrario))
   (define count2 (countSimbolo2 (list-ref matrix 0) 0 0 0 currPlayer))
-
+  
   (if formal
 
       (set! hijos (hijosQuitarRival (list-ref matrix 0) 0 0 currPlayer '()))
@@ -709,7 +714,8 @@
       (if (and (> count 2) (> count2 2) (>= (length hijos) 1) (> depth 0))
 
           (begin
-
+            
+            
             (for ([x hijos])
 
               (define move (maxim x simboloAJugar (- depth 1) ret alpha beta funcEval))
@@ -717,10 +723,12 @@
               (define mat (list-ref move 0))
 
               (set! alpha (max alpha (list-ref move 1)))
-
+              
               (set! ret (list-set ret 1 maxEval))
               (when (= maxEval (list-ref move 1))
-
+                (define saveMove1 (list (list-ref x 2) (list-ref x 3)))
+                (define saveMove2 (list (list-ref x 4) (list-ref x 5)))
+                (set! ultimasJugadas (hash-set ultimasJugadas "O" (list saveMove1 saveMove2)))
                 (set! ret
                       (list (list-ref x 0)
                             maxEval
@@ -728,7 +736,7 @@
                             (list (list-ref x 2) (list-ref x 3))
                             (list (list-ref x 4) (list-ref x 5)))))
 
-              #:break (<= beta alpha)
+              #:break (>= alpha beta)
               #\
 )
 
@@ -753,7 +761,9 @@
 
               (set! ret (list-set ret 1 minEval))
               (when (= minEval (list-ref move 1))
+                
                 (set! ret
+                      
                       (list (list-ref x 0)
                             minEval
                             (list-ref x 1)
