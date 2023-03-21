@@ -467,13 +467,17 @@
               (maxim (list matriz #f) "O" profundidad (list matriz (utilidad matriz "O") #f) -10000000 10000000 #t)))
 
         (set! hashGen (hash))
-        (display "JUGADA INICIAL: ")
-        (displayln playIA)
+        
+        
         ; si forma linea se debe de volver a jugar
         (set! saveMove1 (list-ref playIA 3))
         (set! saveMove2 (list-ref playIA 4))
         (set! ultimasJugadas (hash-set ultimasJugadas "O" (list saveMove1 saveMove2)))
+        (display "Información adicional de la jugada de la IA: ")
+        (displayln playIA)
         (when (list-ref playIA 2)
+          (displayln "El jugador O formó una línea y te quitó una ficha")
+          
           (set! playIA
                 (maxim (list (list-ref playIA 0) #t)
                        "X"
@@ -483,8 +487,10 @@
                        10000000
                        #f)))
         (set! hashGen (hash))
+        
+        
 
-        (displayln playIA)
+        
 
         (set! matriz (list-ref playIA 0))
 
